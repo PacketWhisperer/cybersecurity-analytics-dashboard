@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cybersecurity Analytics Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f1f5f9;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #38bdf8;
+    }
+    .chart-container {
+      width: 90%;
+      max-width: 800px;
+      margin: 30px auto;
+    }
+    table {
+      width: 80%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: #1e293b;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #334155;
+      text-align: center;
+    }
+    th {
+      background-color: #334155;
+      color: #f1f5f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Failed Login Attempts (Log Analysis)</h1>
+
+  <div class="chart-container">
+    <canvas id="loginChart"></canvas>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>IP Address</th><th>Failed Attempts</th></tr>
+    </thead>
+    <tbody id="logTable"></tbody>
+  </table>
+
+  <script>
+    fetch('failed_login_data.json')
+      .then(res => res.json())
+      .then(data => {
+        const labels = data.map(item => item.ip);
+        const counts = data.map(item => item.count);
+
+        const ctx = document.getElementById('loginChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Failed Login Attempts',
+              data: counts,
+              backgroundColor: '#38bdf8'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              title: {
+                display: true,
+                text: 'Failed Logins by IP Address',
+                color: '#f1f5f9'
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#f1f5f9' }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#f1f5f9' }
+              }
+            }
+          }
+        });
+
+        const tableBody = document.getElementById('logTable');
+        data.forEach(entry => {
+          const row = `<tr><td>${entry.ip}</td><td>${entry.count}</td></tr>`;
+          tableBody.innerHTML += row;
+        });
+      });
+  </script>
+</body>
+</html>
