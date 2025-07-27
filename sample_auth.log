@@ -1,0 +1,11 @@
+
+Jul  3 06:42:21 server sshd[12345]: Failed password for root from 192.168.1.10 port 22 ssh2
+Jul  3 06:42:22 server sshd[12346]: Failed password for root from 192.168.1.10 port 22 ssh2
+Jul  3 06:42:23 server sshd[12347]: Failed password for root from 192.168.1.10 port 22 ssh2
+Jul  3 06:43:11 server sshd[12348]: Failed password for admin from 10.0.0.2 port 2222 ssh2
+Jul  3 06:43:14 server sshd[12349]: Accepted password for user1 from 192.168.1.100 port 2222 ssh2
+Jul  3 06:45:19 server sshd[12350]: Failed password for root from 8.8.8.8 port 22 ssh2
+Jul  3 06:46:02 server sshd[12351]: Failed password for root from 8.8.8.8 port 22 ssh2
+Jul  3 06:46:50 server sshd[12352]: Failed password for root from 8.8.8.8 port 22 ssh2
+Jul  3 06:47:30 server sshd[12353]: Failed password for root from 8.8.8.8 port 22 ssh2
+Jul  3 06:48:15 server sshd[12354]: Accepted password for user2 from 192.168.1.200 port 22 ssh2

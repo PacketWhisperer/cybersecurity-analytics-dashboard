@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ Cybersecurity Analytics Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🛡️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(30, 41, 59, 0.9);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #38bdf8;
+            font-size: 1.8rem;
+        }
+
+        .theme-toggle {
+            background: rgba(56, 189, 248, 0.2);
+            border: 1px solid #38bdf8;
+            color: #38bdf8;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(56, 189, 248, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #334155;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+
+        th {
+            background: rgba(51, 65, 85, 0.5);
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        .threat-high { color: #ef4444; }
+        .threat-medium { color: #f59e0b; }
+        .threat-low { color: #eab308; }
+        .threat-normal { color: #10b981; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 3px solid #334155;
+            border-top: 3px solid #38bdf8;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+
+        .upload-area {
+            border: 2px dashed #38bdf8;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .timeline-item {
+            padding: 0.5rem;
+            border-left: 2px solid #38bdf8;
+            margin-left: 1rem;
+            margin-bottom: 0.5rem;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 4px;
+        }
+
+        .simple-chart {
+            display: flex;
+            align-items: end;
+            height: 200px;
+            padding: 1rem;
+            gap: 0.5rem;
+        }
+
+        .chart-bar {
+            background: #38bdf8;
+            min-width: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: end;
+            align-items: center;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+
+        .chart-label {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .chart-value {
+            position: absolute;
+            bottom: 100%;
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Light theme styles */
+        body.light-theme {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1e293b;
+        }
+
+        body.light-theme .header {
+            background: rgba(248, 250, 252, 0.9);
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        body.light-theme .section {
+            background: rgba(248, 250, 252, 0.8);
+            border: 1px solid #cbd5e1;
+        }
+
+        body.light-theme .stat-card {
+            background: rgba(248, 250, 252, 0.9);
+            border: 1px solid #cbd5e1;
+        }
+
+        body.light-theme th {
+            background: rgba(203, 213, 225, 0.5);
+            color: #1e293b;
+        }
+
+        body.light-theme td {
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        body.light-theme .upload-area {
+            border-color: #0ea5e9;
+        }
+
+        .search-filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input, .filter-select {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background: rgba(30, 41, 59, 0.8);
+            color: #f1f5f9;
+            font-size: 0.9rem;
+        }
+
+        body.light-theme .search-input, 
+        body.light-theme .filter-select {
+            border: 1px solid #cbd5e1;
+            background: rgba(248, 250, 252, 0.9);
+            color: #1e293b;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-select {
+            min-width: 150px;
+        }
+
+        .clear-filters {
+            background: #64748b;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .advanced-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .insight-card {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 4px solid #38bdf8;
+        }
+
+        body.light-theme .insight-card {
+            background: rgba(248, 250, 252, 0.9);
+            border-left-color: #0ea5e9;
+        }
+
+        .insight-title {
+            font-weight: bold;
+            color: #38bdf8;
+            margin-bottom: 0.5rem;
+        }
+
+        body.light-theme .insight-title {
+            color: #0ea5e9;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover {
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .sort-arrow {
+            margin-left: 0.5rem;
+            opacity: 0.5;
+        }
+
+        #results {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ Cybersecurity Analytics Dashboard</h1>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            🌙 Dark Mode
+        </button>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h2>📁 Upload Authentication Log</h2>
+            <div class="upload-area">
+                <p>🔒 Upload your auth.log file for analysis</p>
+                <input type="file" id="logFile" class="file-input" accept=".log,.txt">
+                <button class="btn" onclick="document.getElementById('logFile').click()">
+                    Choose File
+                </button>
+                <button class="btn" onclick="loadSampleData()">
+                    Try Sample Data
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing log file...</p>
+        </div>
+
+        <div id="results">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalAttempts">0</div>
+                    <div>Total Failed Attempts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="uniqueIPs">0</div>
+                    <div>Unique IP Addresses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="uniqueUsers">0</div>
+                    <div>Targeted Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="highRiskIPs">0</div>
+                    <div>High Risk IPs</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🧠 Advanced Security Insights</h3>
+                <div class="advanced-stats" id="advancedStats"></div>
+            </div>
+
+            <div class="section">
+                <h3>📊 Failed Attempts by IP Address</h3>
+                <div class="simple-chart" id="ipChart"></div>
+            </div>
+
+            <div class="section">
+                <h3>🎯 Threat Analysis</h3>
+                <div class="search-filter-bar">
+                    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search IP addresses, countries, or ISPs...">
+                    <select id="threatFilter" class="filter-select">
+                        <option value="">All Threat Levels</option>
+                        <option value="High Risk">🔴 High Risk</option>
+                        <option value="Medium Risk">🟡 Medium Risk</option>
+                        <option value="Low Risk">🟢 Low Risk</option>
+                        <option value="Normal">✅ Normal</option>
+                    </select>
+                    <button class="clear-filters" onclick="clearFilters()">Clear Filters</button>
+                </div>
+                <table id="threatTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortTable('ip')">IP Address <span class="sort-arrow">↕️</span></th>
+                            <th class="sortable" onclick="sortTable('count')">Attempts <span class="sort-arrow">↕️</span></th>
+                            <th class="sortable" onclick="sortTable('threat')">Threat Level <span class="sort-arrow">↕️</span></th>
+                            <th class="sortable" onclick="sortTable('country')">Country <span class="sort-arrow">↕️</span></th>
+                            <th class="sortable" onclick="sortTable('isp')">ISP <span class="sort-arrow">↕️</span></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h3>⏰ Recent Activity Timeline</h3>
+                <div id="timeline"></div>
+            </div>
+
+            <div class="section">
+                <button class="btn" onclick="exportData()">
+                    💾 Export Results
+                </button>
+                <button class="btn" onclick="generateReport()">
+                    📋 Generate Security Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+        let filteredData = null;
+        let sortDirection = {};
+
+        // Initialize theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                updateThemeButton();
+            }
+        });
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            updateThemeButton();
+            const currentTheme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+            localStorage.setItem('theme', currentTheme);
+        }
+
+        function updateThemeButton() {
+            const button = document.querySelector('.theme-toggle');
+            if (document.body.classList.contains('light-theme')) {
+                button.innerHTML = '☀️ Light Mode';
+            } else {
+                button.innerHTML = '🌙 Dark Mode';
+            }
+        }
+
+        // Search and filter functionality
+        document.getElementById('searchInput').addEventListener('input', filterData);
+        document.getElementById('threatFilter').addEventListener('change', filterData);
+
+        function filterData() {
+            if (!currentData || !currentData.ip_analysis) return;
+
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const threatFilter = document.getElementById('threatFilter').value;
+
+            filteredData = currentData.ip_analysis.filter(item => {
+                const matchesSearch = !searchTerm || 
+                    item.ip.toLowerCase().includes(searchTerm) ||
+                    (item.country && item.country.toLowerCase().includes(searchTerm)) ||
+                    (item.isp && item.isp.toLowerCase().includes(searchTerm));
+
+                const matchesThreat = !threatFilter || 
+                    (item.threat_level && item.threat_level.includes(threatFilter));
+
+                return matchesSearch && matchesThreat;
+            });
+
+            updateThreatTable(filteredData);
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('threatFilter').value = '';
+            filteredData = currentData ? currentData.ip_analysis : [];
+            updateThreatTable(filteredData);
+        }
+
+        // Sorting functionality
+        function sortTable(column) {
+            if (!filteredData) return;
+
+            const direction = sortDirection[column] === 'asc' ? 'desc' : 'asc';
+            sortDirection[column] = direction;
+
+            filteredData.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(column) {
+                    case 'ip':
+                        aVal = a.ip;
+                        bVal = b.ip;
+                        break;
+                    case 'count':
+                        aVal = a.count;
+                        bVal = b.count;
+                        break;
+                    case 'threat':
+                        aVal = a.threat_level || '';
+                        bVal = b.threat_level || '';
+                        break;
+                    case 'country':
+                        aVal = a.country || '';
+                        bVal = b.country || '';
+                        break;
+                    case 'isp':
+                        aVal = a.isp || '';
+                        bVal = b.isp || '';
+                        break;
+                }
+
+                if (typeof aVal === 'number') {
+                    return direction === 'asc' ? aVal - bVal : bVal - aVal;
+                } else {
+                    return direction === 'asc' ? 
+                        aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                }
+            });
+
+            updateThreatTable(filteredData);
+            updateSortArrows(column, direction);
+        }
+
+        function updateSortArrows(activeColumn, direction) {
+            document.querySelectorAll('.sort-arrow').forEach(arrow => {
+                arrow.textContent = '↕️';
+            });
+            
+            const activeArrow = document.querySelector(`th[onclick="sortTable('${activeColumn}')"] .sort-arrow`);
+            if (activeArrow) {
+                activeArrow.textContent = direction === 'asc' ? '↑' : '↓';
+            }
+        }
+
+        // Advanced pattern analysis
+        function generateAdvancedInsights(data) {
+            const insights = [];
+            
+            // Most targeted user
+            if (data.user_analysis && data.user_analysis.length > 0) {
+                const topUser = data.user_analysis.reduce((max, user) => 
+                    user.count > max.count ? user : max
+                );
+                insights.push({
+                    title: "🎯 Most Targeted User",
+                    value: `${topUser.user} (${topUser.count} attempts)`
+                });
+            }
+
+            // Attack pattern analysis
+            const highRiskCount = data.ip_analysis.filter(ip => 
+                ip.threat_level && ip.threat_level.includes('High Risk')).length;
+            const riskPercentage = ((highRiskCount / data.unique_ips) * 100).toFixed(1);
+            
+            insights.push({
+                title: "⚡ High Risk Ratio",
+                value: `${riskPercentage}% of IPs are high risk`
+            });
+
+            // Geographic analysis
+            const countries = [...new Set(data.ip_analysis
+                .map(ip => ip.country)
+                .filter(country => country && country !== 'Unknown'))];
+            
+            insights.push({
+                title: "🌍 Attack Origins",
+                value: `${countries.length} different countries`
+            });
+
+            // Attack intensity
+            const totalAttempts = data.total_failed_attempts;
+            const avgAttemptsPerIP = (totalAttempts / data.unique_ips).toFixed(1);
+            
+            insights.push({
+                title: "📊 Attack Intensity",
+                value: `${avgAttemptsPerIP} avg attempts per IP`
+            });
+
+            // Time-based insight (if we have timeline data)
+            if (data.timeline && data.timeline.length > 0) {
+                const timeSpan = data.timeline.length;
+                insights.push({
+                    title: "⏱️ Attack Duration",
+                    value: `${timeSpan} recorded events`
+                });
+            }
+
+            return insights;
+        }
+
+        function updateAdvancedStats(insights) {
+            const container = document.getElementById('advancedStats');
+            container.innerHTML = '';
+
+            insights.forEach(insight => {
+                const card = document.createElement('div');
+                card.className = 'insight-card';
+                card.innerHTML = `
+                    <div class="insight-title">${insight.title}</div>
+                    <div>${insight.value}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Report generation
+        function generateReport() {
+            if (!currentData) return;
+
+            const report = {
+                timestamp: new Date().toISOString(),
+                summary: {
+                    total_failed_attempts: currentData.total_failed_attempts,
+                    unique_ips: currentData.unique_ips,
+                    unique_users: currentData.unique_users,
+                    high_risk_ips: currentData.ip_analysis.filter(ip => 
+                        ip.threat_level && ip.threat_level.includes('High Risk')).length
+                },
+                insights: generateAdvancedInsights(currentData),
+                threat_analysis: currentData.ip_analysis,
+                recommendations: [
+                    "🔒 Block high-risk IPs immediately",
+                    "🚨 Monitor accounts with multiple failed attempts",
+                    "🌍 Review geographic access patterns",
+                    "⏰ Implement rate limiting on login attempts",
+                    "📧 Set up automated alerting for suspicious activity"
+                ]
+            };
+
+            const reportStr = JSON.stringify(report, null, 2);
+            const dataBlob = new Blob([reportStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `security_report_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        // File upload handling
+        document.getElementById('logFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showLoading();
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    displayResults(data);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showError('Error uploading file: ' + error.message);
+            });
+        }
+
+        function loadSampleData() {
+            showLoading();
+            fetch('/sample-data')
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                displayResults(data);
+            })
+            .catch(error => {
+                hideLoading();
+                showError('Error loading sample data: ' + error.message);
+            });
+        }
+
+        function displayResults(data) {
+            currentData = data;
+            filteredData = data.ip_analysis || [];
+            
+            // Update statistics
+            document.getElementById('totalAttempts').textContent = data.total_failed_attempts || 0;
+            document.getElementById('uniqueIPs').textContent = data.unique_ips || 0;
+            document.getElementById('uniqueUsers').textContent = data.unique_users || 0;
+            document.getElementById('highRiskIPs').textContent = 
+                (data.ip_analysis || []).filter(ip => ip.threat_level && ip.threat_level.includes('High Risk')).length;
+
+            // Generate and display advanced insights
+            const insights = generateAdvancedInsights(data);
+            updateAdvancedStats(insights);
+
+            // Create simple chart
+            createSimpleChart(data.ip_analysis || []);
+
+            // Update threat table
+            updateThreatTable(filteredData);
+
+            // Update timeline
+            updateTimeline(data.timeline || []);
+
+            // Show results
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function createSimpleChart(ipData) {
+            const chartEl = document.getElementById('ipChart');
+            chartEl.innerHTML = '';
+
+            if (!ipData || ipData.length === 0) {
+                chartEl.innerHTML = '<p>No data to display</p>';
+                return;
+            }
+
+            const maxCount = Math.max(...ipData.map(item => item.count));
+
+            ipData.forEach(item => {
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                
+                const height = (item.count / maxCount) * 150;
+                bar.style.height = height + 'px';
+                
+                if (item.threat_level && item.threat_level.includes('High Risk')) {
+                    bar.style.background = '#ef4444';
+                } else if (item.threat_level && item.threat_level.includes('Medium Risk')) {
+                    bar.style.background = '#f59e0b';
+                } else if (item.threat_level && item.threat_level.includes('Low Risk')) {
+                    bar.style.background = '#eab308';
+                } else {
+                    bar.style.background = '#10b981';
+                }
+
+                bar.innerHTML = `
+                    <div class="chart-value">${item.count}</div>
+                    <div class="chart-label">${item.ip}</div>
+                `;
+
+                chartEl.appendChild(bar);
+            });
+        }
+
+        function updateThreatTable(ipData) {
+            const tbody = document.querySelector('#threatTable tbody');
+            tbody.innerHTML = '';
+
+            ipData.forEach(item => {
+                const row = document.createElement('tr');
+                const threatClass = item.threat_level && item.threat_level.includes('High') ? 'threat-high' :
+                                 item.threat_level && item.threat_level.includes('Medium') ? 'threat-medium' :
+                                 item.threat_level && item.threat_level.includes('Low') ? 'threat-low' : 'threat-normal';
+
+                row.innerHTML = `
+                    <td><code>${item.ip}</code></td>
+                    <td><strong>${item.count}</strong></td>
+                    <td class="${threatClass}">${item.threat_level || 'Unknown'}</td>
+                    <td>${item.country || 'Unknown'}</td>
+                    <td>${item.isp || 'Unknown'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateTimeline(timeline) {
+            const timelineEl = document.getElementById('timeline');
+            timelineEl.innerHTML = '';
+
+            if (!timeline || timeline.length === 0) {
+                timelineEl.innerHTML = '<p>No recent activity</p>';
+                return;
+            }
+
+            timeline.slice(-10).reverse().forEach(event => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                item.innerHTML = `
+                    <strong>${event.timestamp}</strong><br>
+                    IP: <code>${event.ip}</code> → User: <code>${event.user}</code>
+                `;
+                timelineEl.appendChild(item);
+            });
+        }
+
+        function exportData() {
+            if (!currentData) return;
+            
+            const dataStr = JSON.stringify(currentData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `security_analysis_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `⚠️ ${message}`;
+            document.querySelector('.container').appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
